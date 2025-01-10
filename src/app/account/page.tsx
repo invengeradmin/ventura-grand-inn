@@ -1,26 +1,18 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { supabase } from '../../lib/supabaseClient';
+import useAuth from '@/hooks/useAuth';
+import { supabase } from '@/lib/supabaseClient';
 import { useRouter } from 'next/navigation';
 
 export default function AccountPage() {
+  const { user } = useAuth();
   const router = useRouter();
-  const [user, setUser] = useState(null);
 
-  useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-
-      if (!user) {
-        router.push('/login');
-      } else {
-        setUser(user);
-      }
-    };
-
-    getUser();
-  }, [router]);
+  // If there's no user, redirect to login
+  if (!user) {
+    router.push('/login');
+    return null;
+  }
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -29,7 +21,7 @@ export default function AccountPage() {
 
   return (
     <div>
-      <h1>Welcome, {user?.email}</h1>
+      <h1>Welcome, {user.email}</h1>
       <button onClick={handleLogout}>Log Out</button>
     </div>
   );
