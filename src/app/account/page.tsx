@@ -1,18 +1,25 @@
 'use client';
 
-import useAuth from '@/hooks/useAuth';
+import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { useRouter } from 'next/navigation';
 
 export default function AccountPage() {
-  const { user } = useAuth();
   const router = useRouter();
+  const [user, setUser] = useState(null);
 
-  // If there's no user, redirect to login
-  if (!user) {
-    router.push('/login');
-    return null;
-  }
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        router.push('/login');
+      } else {
+        setUser(user);
+      }
+    };
+
+    fetchUser();
+  }, [router]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -20,9 +27,24 @@ export default function AccountPage() {
   };
 
   return (
-    <div>
-      <h1>Welcome, {user.email}</h1>
-      <button onClick={handleLogout}>Log Out</button>
+    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+      <div className="bg-white shadow-lg rounded-lg p-8 max-w-md w-full">
+        {user ? (
+          <>
+            <h1 className="text-2xl font-bold text-center text-gray-800 mb-6">
+              Welcome, {user.email}
+            </h1>
+            <button
+              onClick={handleLogout}
+              className="w-full bg-red-500 text-white py-2 rounded-lg hover:bg-red-600 transition duration-300"
+            >
+              Log Out
+            </button>
+          </>
+        ) : (
+          <p>Loading...</p>
+        )}
+      </div>
     </div>
   );
 }
